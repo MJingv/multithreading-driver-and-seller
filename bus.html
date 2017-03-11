@@ -1,0 +1,292 @@
+<html>
+<head><title>canvas</title>
+<meta charset="utf-8">
+<link rel="stylesheet" href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<style type="text/css">
+	#show{
+		width: 1200px;
+		margin: 0 auto;
+	}
+	h3{
+		text-align: center;
+		background-color: #FFCC66;
+	}
+</style>
+
+<script type="text/javascript">
+var ctx; //绘制图形
+var door; 
+var stop=1;
+var A;
+var B;
+var s;
+var l=0;
+var everything=[];
+var waittime=1000;
+var speed=5;
+var distance=80;
+var lus=[80,420,920,1220];
+var passenger=[];
+var tid;
+var i=0;//station
+var text=[];
+var station=["S站：","A站：","B站：","终点站："];
+function Bus(bx,sy,style1,style2,style3){
+	this.bx=bx;
+	this.sy=sy;
+	this.fillstyle1=style1; 
+	this.fillstyle2=style2; 
+	this.fillstyle3=style3; 
+	this.movebus=movebus;
+	this.draw=drawbus;
+}
+function movebus(){
+	this.bx+=speed;
+	distance=this.bx;
+}
+function drawbus(){
+	ctx.beginPath();
+	ctx.fillStyle =this.fillstyle2;
+	//draw the tyre
+	ctx.arc(this.bx-40,this.sy+20,10,0,Math.PI*2,true);
+	ctx.arc(this.bx+20,this.sy+20,10,0,Math.PI*2,true);	
+	ctx.fill();
+  	//draw the bus head
+	ctx.beginPath();
+	ctx.fillStyle=this.fillstyle1;
+	ctx.arc(this.bx+20,this.sy+20,40,0,1.5*Math.PI,true);
+	ctx.closePath();
+	ctx.fill();
+	//draw the bus tri frame
+	ctx.beginPath();
+	ctx.fillStyle=this.fillstyle1;
+	ctx.moveTo(this.bx+20,this.sy+20);
+	ctx.lineTo(this.bx+60,this.sy+20);
+	ctx.lineTo(this.bx+20,this.sy-20);
+	ctx.lineTo(this.bx+20,this.sy+20);
+	ctx.fill();
+	//draw the bus footer
+	ctx.beginPath();
+	ctx.fillRect(this.bx-60,this.sy-20,80,40);
+	ctx.closePath();
+	//draw the door
+	ctx.beginPath();
+	if(stop==1){ //stop the bus
+		ctx.fillStyle="#FF6666";
+	}else{
+		ctx.fillStyle="#FFFF66";
+	}
+	ctx.fillRect(this.bx-14,this.sy-5,20,25);
+	
+}
+var bus=new Bus(80,320,"#66CCFF","#800000","#CCCCCC");
+function Myway(wx,wy,wwidth,wheight,wtylestring){
+	this.wx=wx;
+	this.wy=wy;
+	this.wwidth=wwidth;
+	this.wheight=wheight;
+	this.fillstyle=wtylestring;
+	this.draw=drawway;
+}
+function drawway(){
+	ctx.fillStyle=this.fillstyle;
+	ctx.fillRect(this.wx,this.wy,this.wwidth,this.wheight);	
+}
+
+function  Line(bx,by,sx,sy,stylestring){
+	this.bx=bx;
+	this.by=by;
+	this.sx=sx;
+	this.sy=sy;
+	this.strokeStyle="#804000";
+	this.draw=drawline;
+}
+
+
+function drawline(){
+	//draw the bus statino line
+	var jian=0;//没到站
+	if(this.bx>=bus.bx-60&&this.bx<=bus.bx+60)
+		{this.by=this.by-51;jian=1;}
+	ctx.strokeStyle="#800000";
+	ctx.lineWidth=10;
+
+	ctx.beginPath();
+	ctx.moveTo(this.bx,this.by);
+	ctx.lineTo(this.sx,this.sy);
+	ctx.stroke();
+	if(jian==1){
+		this.by+=51;
+	}
+}
+function Text(text,font,bx,by){
+	this.text=text;//文字部分
+	this.font=font;//字体大小等信息
+	this.bx=bx;//x坐标
+	this.by=by;//y坐标
+	this.draw=drawtext;//开始绘画吧
+}
+function drawtext(){
+	//draw the text
+	ctx.font=this.font;
+	ctx.fillStyle="#7F7F7F";
+	ctx.fillText(this.text,this.bx,this.by);
+}
+var texts=new Text(station[0],"bold 18pt sans-serif",32,190);
+var texta=new Text(station[1],"bold 18pt sans-serif",372,190);
+var textb=new Text(station[2],"bold 18pt sans-serif",872,190);
+var textl=new Text(station[3],"bold 18pt sans-serif",1172,190);
+var textdriver=new Text(" ","bold 18pt sans-serif",500,50);
+var saleman=new Text(" ","bold 18pt sans-serif",500,80);
+text.push(texts);
+text.push(texta);
+text.push(textb);
+text.push(textl);
+var ls=new Line(80,340,80,200);
+var la=new Line(420,340,420,200);
+var lb=new Line(920,340,920,200);
+var ll=new Line(1220,340,1220,200);
+//站牌绘制
+var way=new Myway(20,350,1300,20,"rgb(40,25,10)");
+var Sstop=new Myway(25,160,120,40,"#FFCC66");
+var Astop=new Myway(365,160,120,40,"#FFCC66");
+var Bstop=new Myway(865,160,120,40,"#FFCC66");
+var Lstop=new Myway(1165,160,120,40,"#FFCC66");
+//移除
+everything.push(ls);
+everything.push(la);
+everything.push(lb);
+everything.push(ll);
+everything.push(way);
+everything.push(Sstop);
+everything.push(Astop);
+everything.push(Bstop);
+everything.push(Lstop);
+everything.push(bus);
+everything.push(texts);
+everything.push(texta);
+everything.push(textb);
+everything.push(textl);
+everything.push(textdriver);
+everything.push(saleman);
+
+function init(){
+	textdriver.text="始发站";
+	ctx=document.getElementById("canvas").getContext('2d');
+	drawall(); 
+} 
+function drawall(){
+	ctx.clearRect(0,0,1350,400);
+	var i;
+	for (i=0;i<everything.length;i++) {
+		everything[i].draw();
+	}
+}
+function start(){
+	door=0;//open the door
+	stop=1;//bus is stop
+	s=Number(document.f.s.value);// the number of station s
+	A=Number(document.f.a.value);
+	B=Number(document.f.b.value);
+	texts.text=station[0]+s+"人";
+	texta.text=station[1]+A+"人";
+	textb.text=station[2]+B+"人";
+	textl.text=station[3];
+	passenger.push(s);
+	passenger.push(A);
+	passenger.push(B);
+	passenger.push(l);
+	drawall();
+	tid=setInterval(go,50);
+	return false;
+}
+function go(){
+	if(distance>=1220){
+		clearInterval(tid);
+		saleman.text="";
+		drawall();
+	}
+	drawall();
+	driver();
+	drawall();
+	seller();
+	drawall();
+}
+var startTime ;
+function seller(){
+	if(stop==1){
+		saleman.text="";
+		if(door==1){
+			door=0;//open the door
+			startTime= new Date().getTime(); 
+			//暂停0.5s
+    			while (new Date().getTime() < startTime + 500);		
+		}else{
+			if(passenger[i]>0){
+				startTime= new Date().getTime(); 
+    				while (new Date().getTime() < startTime + 500);
+				passenger[i]-=1; 
+				text[i].text=station[i]+passenger[i]+"人";
+			}else{
+				startTime= new Date().getTime(); 
+    				while (new Date().getTime() < startTime + 500);
+				door=1;//close the door
+				i+=1;//station++
+			}
+		}
+	}else{
+		//when the bus is driving ,show the text
+		saleman.text="售票员正在售票……";
+	}
+}
+function driver(){
+	if(distance>=lus[i]){
+		if(stop==0){
+			stop=1;
+		}
+		textdriver.text=station[i];
+	}else{
+		if(door==1){
+			stop=0;
+			bus.movebus();
+			textdriver.text="司机正在开车，下一站："+station[i];
+		}
+	}
+}
+
+</script>
+</head>
+<body onLoad="init();">
+<h3 >司机与售票员（信号量操作）动画</h3>
+<!-- 创建canvas画布 -->
+<canvas id="canvas" width="1350" height="400">
+your browser doesn't support the HTML5 element canvas.
+</canvas><br/>
+
+<div class="panel panel-warning" id="show">
+	<div class="panel-heading">输入各站的候车人数</div>
+	<form name="f" id="f" onSubmit="return start();"  class="form-horizontal">
+	<div class="panel-body">
+			<div class="col-xs-4">
+      			s站<input class="form-control " type="text"  name="s" id="s"  placeholder="s站候车人数">
+    		</div>
+			 
+			<div class="col-xs-4">
+      			A站<input class="form-control " type="text"  name="a" id="a"  placeholder="A站候车人数">
+    		</div>
+    		<div class="col-xs-4">
+      			B站<input class="form-control " type="text"  name="b" id="b" placeholder="B站候车人数">
+    		</div>
+				
+	</div>
+	<div class="panel-footer">
+	<input type="submit" name="">
+	</div>
+	</form> 
+</div>
+
+<script src="http://apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js"></script>
+ <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script> 
+
+</body>
+</html>
